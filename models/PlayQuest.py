@@ -16,6 +16,12 @@ from tkinter import StringVar
 # from database_connection import db
 
 # cursor = db.cursor()
+notes = []
+text_entry = None
+notes_listbox = None
+note_num_entry = None
+notes_file = "zmienne/notes.json"
+texk_bout_me = None
 logged_in_user=None
 user_id = None
 STATUS_FILE = "zmienne/checkbox_status.pkl"
@@ -242,7 +248,7 @@ def show_main_menu():
     #Fonts
     font1= ('Helvetica',25,'bold')
     font2= ('Arial',16,'bold')
-    font3= ('Arial',12,'bold')
+    font3= ('Arial',9,'bold')
     font4= ('Arial',9,'bold','underline')
     font5= ('Helvetica',18,'bold')
     font6= ('Helvetica',10,'bold')
@@ -275,6 +281,57 @@ def show_main_menu():
     image_12=ImageTk.PhotoImage(Image.open("./icons/diskette.png"),size=(20,20))
     image_13=ImageTk.PhotoImage(Image.open("./icons/bin.png"),size=(40,40))
     image_14=ImageTk.PhotoImage(Image.open("./avatars/avatar1.png"),size=(200,200))
+
+    def add_note():
+        note = text_entry.get("1.0", "end-1c").strip()
+        if note:
+            notes.append(note)
+            update_notes_listbox()
+            text_entry.delete("1.0", "end")
+            save_notes()
+
+    def delete_note():
+        try:
+            note_number = int(note_num_entry.get())
+            if 1 <= note_number <= len(notes):
+                notes.pop(note_number - 1)
+                update_notes_listbox()
+                note_num_entry.delete(0, 'end')
+                save_notes()
+            else:
+                tkmb.showerror(title="Info", message="Invalid note number.")
+        except ValueError:
+            tkmb.showerror(title="Info", message="Please enter a valid number.")
+
+    def update_notes_listbox():
+        notes_listbox.delete("1.0", "end")
+        for index, note in enumerate(notes, start=1):
+            numbered_note = f"{index}. {note}\n\n"
+            notes_listbox.insert("end", numbered_note)
+
+    def save_notes():
+        with open(notes_file, 'w') as file:
+            json.dump(notes, file)
+
+    def load_notes():
+        if os.path.exists(notes_file):
+            with open(notes_file, 'r') as file:
+                return json.load(file)
+        return []
+
+    def select_image():
+        # Otwórz okno dialogowe wyboru pliku
+        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png")])
+        
+        if file_path:
+            # Wczytaj i przeskaluj obraz do 200x200 pikseli
+            image = Image.open(file_path)
+            image = image.resize((200, 200), Image.LANCZOS)
+
+            
+            # Zapisz obraz jako 'avatar1' w folderze 'avatars'
+            save_path = os.path.join("avatars", "avatar1.png")
+            image.save(save_path, format="PNG")
 
 
     def load_power_mode():
@@ -644,21 +701,71 @@ def show_main_menu():
 
     ### ACCOUNT CARD ###
     def page_account_def():
+        global text_entry, notes_listbox, note_num_entry, notes
+
+        notes = load_notes()
+
         page_account = ctk.CTkFrame(master=frame_middle,fg_color="#555B83",border_width=0.6 , border_color="black",corner_radius=0)
         page_account.pack(anchor=tkinter.W,expand = True, fill="both")
 
-        page_account_scroll = ctk.CTkScrollableFrame(master=page_account,fg_color="#555B83",corner_radius=0)
-        page_account_scroll.pack(padx=2, pady=2, fill=ctk.BOTH, expand=True)
-
-        page_account_nickname_label = ctk.CTkLabel(page_account_scroll,corner_radius=10)
+        page_account_nickname_label = ctk.CTkLabel(page_account,corner_radius=10)
         page_account_nickname_label.pack(side = "top", padx=30,pady=30,anchor=tkinter.W)
         page_account_nickname_label.configure(text=f"Hello {logged_in_user}",font=font10)
 
-        page_account_note_abnout_me = ctk.CTkLabel(page_account_scroll,corner_radius=10,text="This note is about you")
-        page_account_note_abnout_me.place(x=250,y=200)
+        # page_account_note_abnout_me = ctk.CTkLabel(page_account,corner_radius=10,text="This note is about you")
+        # page_account_note_abnout_me.place(x=250,y=500)
 
-        page_account_avatar_label = ctk.CTkLabel(page_account_scroll,corner_radius=10,image=image_14,text="")
+        page_account_avatar_label = ctk.CTkLabel(page_account,corner_radius=10,image=image_14,text="")
         page_account_avatar_label.pack(side = "top", padx=40,pady=20,anchor=tkinter.W)
+
+        page_account_aoutyou_label= ctk.CTkLabel(page_account,text="Here you can add some informations about you",text_color="white")
+        page_account_aoutyou_label.place(x=280,y=129)
+        page_account_aoutyou_label.configure(font=font3)
+
+        page_account_aoutyou_textbox =ctk.CTkTextbox(page_account,width=270,height=160,activate_scrollbars=False,font=font7,corner_radius=5,fg_color="#4B5172")
+        page_account_aoutyou_textbox.place(x=286,y=176)
+        page_account_aoutyou_textbox.insert("0.0", f"{texk_bout_me}")
+
+        page_account_aoutyou_textbox_button_save= ctk.CTkButton(page_account,fg_color="#555B83",text="Edit Info",bg_color='#555B83',width=60,corner_radius=5)
+        page_account_aoutyou_textbox_button_save.place(x=495,y=338)
+
+        page_account_change_photo_button= ctk.CTkButton(page_account,fg_color="#555B83",text="Edit photo",bg_color='#555B83',width=60,corner_radius=5,command=select_image)
+        page_account_change_photo_button.place(x=115,y=338)
+
+                # Funkcja ograniczająca ilość znaków do 300
+        def limit_text(event=None):
+            current_text = page_account_aoutyou_textbox.get("1.0", "end-1c")  # Pobierz tekst z pola
+            if len(current_text) > 200:
+                page_account_aoutyou_textbox.delete("1.0", "end")  # Wyczyść pole
+                page_account_aoutyou_textbox.insert("1.0", current_text[:200])  # Wstaw ograniczony tekst
+
+        # Powiązanie funkcji z wpisywaniem tekstu
+        page_account_aoutyou_textbox.bind("<KeyRelease>", limit_text)
+
+        label_text_notes_put= ctk.CTkLabel(page_account,text="Here you can put some notes",text_color="white")
+        label_text_notes_put.place(x=80,y=370)
+        label_text_notes_put.configure(font=font8)
+
+        text_entry = ctk.CTkTextbox(master=page_account, width=400, height=200,fg_color="#4B5172")
+        text_entry.place(x=80,y=400)
+
+        notes_listbox = ctk.CTkTextbox(master=page_account, width=400, height=420,fg_color="#4B5172")
+        notes_listbox.place(x=620,y=176)
+
+        label_text_notes= ctk.CTkLabel(page_account,text="Your notes",text_color="white")
+        label_text_notes.place(x=620,y=129)
+        label_text_notes.configure(font=font8)
+
+        note_num_entry = ctk.CTkEntry(master=page_account, placeholder_text="Enter note number to delete",width=170)
+        note_num_entry.place(x=690,y=610)
+
+        add_note_button = ctk.CTkButton(master=page_account, text="Add Note", command=add_note,fg_color="#4B5172")
+        add_note_button.place(x=200,y=610)
+
+        delete_note_button = ctk.CTkButton(master=page_account, text="Delete Note",width=80,fg_color="#4B5172",hover_color="#F95454", command=delete_note)
+        delete_note_button.place(x=860,y=610)
+
+        update_notes_listbox()
 
     def show_frame(frame1):
         page_general.pack_forget()
