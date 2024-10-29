@@ -1,7 +1,0 @@
-C:/Program Files/Blender Foundation/Blender 4.0/blender-launcher.exe
-C:/Users/barta/AppData/Local/Programs/CurseForge Windows/CurseForge.exe
-"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Steam\Steam.lnk"
-"C:\Users\barta\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Discord Inc\Discord.lnk"
-"C:\Program Files\TeamViewer\TeamViewer.exe"
-C:/Program Files/Parsec/parsecd.exe
-C:/Users/barta/Downloads\FigmaSetp.exe
