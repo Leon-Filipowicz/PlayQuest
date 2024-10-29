@@ -1,0 +1,4 @@
+customtkinter
+Pillow
+mysql-connector-python
+sounddevice
