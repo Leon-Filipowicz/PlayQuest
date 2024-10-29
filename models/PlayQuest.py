@@ -21,7 +21,7 @@ text_entry = None
 notes_listbox = None
 note_num_entry = None
 notes_file = "zmienne/notes.json"
-texk_bout_me = None
+text_about_me = None
 logged_in_user=None
 user_id = None
 STATUS_FILE = "zmienne/checkbox_status.pkl"
@@ -701,6 +701,19 @@ def show_main_menu():
 
     ### ACCOUNT CARD ###
     def page_account_def():
+        # Fetch the result of the SELECT query to avoid "Unread result found" error
+        cursor.execute("SELECT about_me FROM users WHERE mail = %s", (logged_in_user,))
+        text_about_me_sql = cursor.fetchone()[0]  # Or fetchall() if you expect multiple rows)
+
+        def update_about_me():
+            # Get the updated text from the textbox
+            new_about_me_text = page_account_aoutyou_textbox.get("0.0", "end-1c")  # 'end-1c' to remove the extra newline at the end
+            
+            # Execute the SQL UPDATE statement
+            cursor.execute("UPDATE users SET about_me = %s WHERE mail = %s", (new_about_me_text, logged_in_user))
+            
+            # Commit the changes to the database
+            db.commit()
         global text_entry, notes_listbox, note_num_entry, notes
 
         notes = load_notes()
@@ -724,9 +737,9 @@ def show_main_menu():
 
         page_account_aoutyou_textbox =ctk.CTkTextbox(page_account,width=270,height=160,activate_scrollbars=False,font=font7,corner_radius=5,fg_color="#4B5172")
         page_account_aoutyou_textbox.place(x=286,y=176)
-        page_account_aoutyou_textbox.insert("0.0", f"{texk_bout_me}")
+        page_account_aoutyou_textbox.insert("0.0", f"{text_about_me_sql}")
 
-        page_account_aoutyou_textbox_button_save= ctk.CTkButton(page_account,fg_color="#555B83",text="Edit Info",bg_color='#555B83',width=60,corner_radius=5)
+        page_account_aoutyou_textbox_button_save= ctk.CTkButton(page_account,fg_color="#555B83",text="Edit Info",bg_color='#555B83',width=60,corner_radius=5,command=update_about_me)
         page_account_aoutyou_textbox_button_save.place(x=495,y=338)
 
         page_account_change_photo_button= ctk.CTkButton(page_account,fg_color="#555B83",text="Edit photo",bg_color='#555B83',width=60,corner_radius=5,command=select_image)
