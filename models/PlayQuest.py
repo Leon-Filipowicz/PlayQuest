@@ -4,18 +4,25 @@ import mysql.connector
 import hashlib
 from PIL import ImageTk, Image
 import tkinter
-import webbrowser
 import os
-import random
+from tkinter import StringVar
+import requests
+from bs4 import BeautifulSoup
+import asyncio
+import aiohttp
+from io import BytesIO
 import json
+import random
 from time import strftime
 import pickle
 import winreg as reg
 import platform
-from tkinter import StringVar
-# from database_connection import db
+import sys
+import webbrowser
+from tkinter import filedialog
+import subprocess
 
-# cursor = db.cursor()
+
 notes = []
 text_entry = None
 notes_listbox = None
@@ -30,15 +37,20 @@ COLOR_FILE = "zmienne/clock_color.pkl"
 AUTOSTART_FILE = "zmienne/autostart_status.pkl"
 CONFIG_FILE = "zmienne/config.txt"  # Plik do przechowywania ustawień zasilania
 
+# cursor = db.cursor()
+logged_in_user = None
+logged_user_id = None
+user_id = None
+
 ctk.set_appearance_mode("System") # Ustawienie trybu wyglądu na systemowy
 ctk.set_default_color_theme("dark-blue") # Ustawienie domyślnego motywu kolorystycznego na niebieski
 
 db = mysql.connector.connect(
-    host="109.207.145.26",
-    port='32770',
-    user="proj_inz_user",
-    password="proj_inz_user",
-    database="proj_inz"
+    host="x",
+    port='x',
+    user="x",
+    password="x",
+    database="x"
 )
 
 # Utworzenie kursora
@@ -53,6 +65,7 @@ login_frame = ctk.CTkFrame(app)
 register_frame = ctk.CTkFrame(app)
 
 credentials_file = 'credentials.json'  # Plik do zapisywania danych logowania
+
 
 # Funkcja do odczytywania zapisanych danych logowania
 def load_credentials():
@@ -106,7 +119,7 @@ def login():
     # Sprawdzenie, czy podane dane logowania są poprawne
     cursor.execute("SELECT * FROM users WHERE mail = %s AND password = %s", (mail, hashed_password))
     result = cursor.fetchone()
-
+    # Example usage: Replace with actual email of the logged-in user
     if result:
         logged_in_user = mail
         if remember_var.get():
@@ -146,17 +159,6 @@ def register():
     db.commit()
 
     tkmb.showinfo(title="Rejestracja udana", message="Użytkownik zarejestrowany pomyślnie!")
-
-# Funkcja logowania za pomocą konta Google
-# def login_with_google():
-#     # Otwórz stronę logowania Google w przeglądarce
-#         google_auth_url = "https://accounts.google.com/o/oauth2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=email"
-#         webbrowser.open(google_auth_url)
-
-# def login_with_facebook():
-#         # Implementacja Facebook OAuth2 (dla celów demonstracyjnych)
-#     facebook_auth_url = "https://www.facebook.com/dialog/oauth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=email"
-#     webbrowser.open(facebook_auth_url)
 
 img1=ImageTk.PhotoImage(Image.open("./images/background_login.jpg"))
 l1=ctk.CTkLabel(master=app,image=img1)
@@ -203,9 +205,6 @@ user_entry.place(x=50, y=110)
 user_pass=ctk.CTkEntry(master=login_frame, width=220, placeholder_text='Password', show="*")
 user_pass.place(x=50, y=165)
 
-# l3=ctk.CTkLabel(master=login_frame, text="Forget password?",font=('Century Gothic',12))
-# l3.place(x=155,y=195)
-
 #Create login buttons
 login_button = ctk.CTkButton(master=login_frame, width=220, text="Login", command=login, corner_radius=6)
 login_button.place(x=50, y=240)
@@ -214,33 +213,12 @@ remember_var = ctk.BooleanVar()
 remember_checkbox = ctk.CTkCheckBox(master=login_frame, text="Zapamiętaj mnie", variable=remember_var)
 remember_checkbox.place(x=95, y=210)
 
-
-# img2=ctk.CTkImage(Image.open("./images/Google__G__Logo.svg.webp").resize((20,20), Image.Resampling.LANCZOS))
-# img3=ctk.CTkImage(Image.open("./images/124010.png").resize((20,20), Image.Resampling.LANCZOS))
-# google_login_button= ctk.CTkButton(master=login_frame, image=img2, text="Google", width=100, height=20, compound="left", fg_color='white', text_color='black', hover_color='#AFAFAF', command=login_with_google)
-# google_login_button.place(x=50, y=290)
-
-# facebook_login_button= ctk.CTkButton(master=login_frame, image=img3, text="Facebook", width=100, height=20, compound="left", fg_color='white', text_color='black', hover_color='#AFAFAF', command=login_with_facebook)
-# facebook_login_button.place(x=170, y=290)
-
 switch_to_register = ctk.CTkButton(master=login_frame, width= 220, text="Don't have account ?", corner_radius=6, command=register_frame_switch, fg_color = 'transparent')
 switch_to_register.place(x=50, y= 320)
 
 load_login_data()
 
 def show_main_menu():
-    import customtkinter as ctk
-    import tkinter.messagebox as tkmb
-    import mysql.connector
-    import hashlib
-    from PIL import ImageTk, Image
-    import tkinter
-    import webbrowser
-    import os
-    from tkinter import filedialog
-    import subprocess
-    import os
-    import sys
 
     # cursor.execute("SELECT username FROM users WHERE mail = %s ", (logged_in_user,))
     # username = cursor.fetchone()
@@ -450,7 +428,6 @@ def show_main_menu():
     def hide_indicate():
         button2_indicate.configure(bg_color='#3F4462')
         button3_indicate.configure(bg_color='#3F4462')
-        button4_indicate.configure(bg_color='#3F4462')
         button5_indicate.configure(bg_color='#3F4462')
         button6_indicate.configure(bg_color='#3F4462')
         button7_indicate.configure(bg_color='#3F4462')
@@ -481,6 +458,8 @@ def show_main_menu():
             menu_frame.pack(side="right")  # Rozwiń menu
             l2.focus_force()  # Ustawia fokus na oknie
 
+
+
         ###################################### Left side ######################################
 
     l1 = ctk.CTkFrame(master=main, width=216, fg_color="#3F4462",border_width=0.6 , border_color="black",corner_radius=0,)
@@ -499,25 +478,20 @@ def show_main_menu():
     button3_indicate = ctk.CTkLabel(master=l1,text="",bg_color="#3F4462",width=5,height=35)
     button3_indicate.place(x=3,y=182)
 
-    button4 = ctk.CTkButton(master=l1,image=image_4 , width=108,height=24, text="Community", text_color="#FFFFFF", font=font2, fg_color="#3F4462",hover_color="#384069",anchor='w',command=lambda: indicate(button4_indicate,page_community_def))
-    button4.place(x=33,y=231)
-    button4_indicate = ctk.CTkLabel(master=l1,text="",bg_color="#3F4462",width=5,height=35)
-    button4_indicate.place(x=3,y=231)
-
     button5 = ctk.CTkButton(master=l1,image=image_5 , width=108,height=24, text="Wish List", text_color="#FFFFFF", font=font2, fg_color="#3F4462",hover_color="#384069",anchor='w',command=lambda: indicate(button5_indicate,page_wish_list_def))
-    button5.place(x=33,y=280)
+    button5.place(x=33,y=231)
     button5_indicate = ctk.CTkLabel(master=l1,text="",bg_color="#3F4462",width=5,height=35)
-    button5_indicate.place(x=3,y=280)
+    button5_indicate.place(x=3,y=231)
 
     button6 = ctk.CTkButton(master=l1,image=image_6 , width=108,height=24, text="Account", text_color="#FFFFFF", font=font2, fg_color="#3F4462",hover_color="#384069",anchor='w',command=lambda: indicate(button6_indicate,page_account_def))
-    button6.place(x=33,y=329)
+    button6.place(x=33,y=280)
     button6_indicate = ctk.CTkLabel(master=l1,text="",bg_color="#3F4462",width=5,height=35)
-    button6_indicate.place(x=3,y=329)
+    button6_indicate.place(x=3,y=280)
 
     button7 = ctk.CTkButton(master=l1,image=image_7 , width=108,height=24, text="Settings", text_color="#FFFFFF", font=font2, fg_color="#3F4462",hover_color="#384069",anchor='w',command=lambda: indicate(button7_indicate,page_setting_def))
-    button7.place(x=33,y=378)
+    button7.place(x=33,y=329)
     button7_indicate = ctk.CTkLabel(master=l1,text="",bg_color="#3F4462",width=5,height=35)
-    button7_indicate.place(x=3,y=378)
+    button7_indicate.place(x=3,y=329)
 
     # etykieta_czas = ctk.CTkLabel(master=l1, font=('Helvetica', 32), text_color="#FFFFFF",fg_color='#3F4462',anchor="center",width=216)
     # etykieta_czas.pack(side="bottom",pady=5,padx=5)
@@ -564,13 +538,114 @@ def show_main_menu():
     frame_middle.pack(expand = True,fill="both")
     frame_middle.pack_propagate(0)
 
+
     ### SHOP CARD ###
+    def get_user_id():
+            cursor.execute('SELECT id FROM users WHERE mail = %s',(logged_in_user,))
+            result = cursor.fetchone()
+            if result:
+                global user_id 
+                user_id = result[0]
+                return user_id
+            else:
+                print("No user found with that email.")
+                return None
+
+    get_user_id()
+
+    # Function to add a game to the wishlist
+    def add_to_wishlist(user_id, title, price, link):
+        cursor.execute('SELECT * FROM wishlist WHERE user_id = %s AND title = %s', (user_id, title))
+        if cursor.fetchone():
+            tkmb.showinfo("Info", "Game already exists in wishlist.")
+        else:
+            try:
+                cursor.execute(
+                    'INSERT INTO wishlist (user_id, title, price, link) VALUES (%s, %s, %s, %s)',
+                    (user_id, title, price, link)
+                )
+                tkmb.showinfo("Info", 'Game succesfully added to wishlist!')
+                db.commit()
+            except mysql.connector.Error as e:
+                print(f"An error occurred while adding to wishlist: {e}")
+                db.rollback()
+
+    # Function to open game link in browser
+    def open_link(url):
+        webbrowser.open_new(url)
+
+    # Function to fetch data from Steam
+    async def get_steam_price(session, game_name):
+        search_url = f'https://store.steampowered.com/search/?term={game_name.replace(" ", "+")}'
+        async with session.get(search_url) as response:
+            if response.status == 200:
+                html = await response.text()
+                soup = BeautifulSoup(html, 'html.parser')
+                search_results = soup.find_all('a', class_='search_result_row')
+                if search_results:
+                    first_result = search_results[0]
+                    game_link = first_result['href']
+                    return await get_steam_game_price(session, game_link)
+        return None, None, None, None, None
+
+    # Function to fetch detailed game info from Steam
+    async def get_steam_game_price(session, game_link):
+        async with session.get(game_link) as response:
+            if response.status == 200:
+                html = await response.text()
+                soup = BeautifulSoup(html, 'html.parser')
+                game_title = soup.find('div', class_='apphub_AppName').text.strip()
+                game_image = soup.find('img', class_='game_header_image_full')['src']
+                discount_tag = soup.find('div', class_='discount_pct')
+                discount = discount_tag.text.strip().replace('-', '').replace('%', '') if discount_tag else None
+                price_tag = soup.find('div', 'discount_final_price' if discount_tag else 'game_purchase_price price')
+                game_price = price_tag.text.strip() if price_tag else "Price not found"
+                return game_title, game_price, discount, game_image, game_link
+        return None, None, None, None, None
+
+    # Function to update results in the GUI
+    def update_result_text(prices):
+        for widget in frame_middle.winfo_children():
+            widget.destroy()
+        for platform, title, price, discount, image, link in prices:
+            if title:
+                game_frame = ctk.CTkFrame(master=frame_middle, fg_color="#555B83")
+                game_frame.pack(pady=10, padx=10, fill="x")
+                img_data = requests.get(image).content
+                img = Image.open(BytesIO(img_data)).resize((225, 127))
+                img_label = ctk.CTkLabel(master=game_frame, image=ImageTk.PhotoImage(img), text=None)
+                img_label.pack(side="left", padx=5)
+                details = f"{title}\nPrice: {price}\nDiscount: {discount}%"
+                ctk.CTkLabel(master=game_frame, text=details, text_color="#FFFFFF").pack(side="left", padx=10)
+                ctk.CTkButton(master=game_frame, text="Add to Wishlist", command=lambda: add_to_wishlist(user_id, title, price, link)).pack(side="right", padx=10)
+                ctk.CTkButton(master=game_frame, text="View on Steam", command=lambda: open_link(link)).pack(side="right", padx=10)
+
+    # Function triggered when clicking the search button
+    def search_action(game_name):
+        asyncio.run(async_search(game_name))
+
+    # Async search function to fetch game data
+    async def async_search(game_name):
+        async with aiohttp.ClientSession() as session:
+            steam_title, steam_price, steam_discount, steam_image, steam_link = await get_steam_price(session, game_name)
+            update_result_text([("Steam", steam_title, steam_price, steam_discount, steam_image, steam_link)])
+
+    # Main shop card setup function
     def def_page_shop_card():
-        page_shop = ctk.CTkFrame(master=frame_middle, fg_color="#555B83",border_width=0.6 , border_color="black",corner_radius=0)
-        page_shop.pack(anchor=tkinter.W,expand = True, fill="both")
-        
-        shop_page_load=ctk.CTkLabel(master=page_shop, width=875,  height=432, fg_color="#FFFFFF",corner_radius=15,text="Comming Soon Shop",anchor="center",font=("Arial",58),text_color="black")
-        shop_page_load.pack(padx=15, pady=15)
+        global result_frame
+        page_shop = ctk.CTkFrame(master=frame_middle, fg_color="#555B83", border_width=0.6)
+        page_shop.pack(expand=True, fill="both")
+        search_frame = ctk.CTkFrame(master=page_shop, fg_color="#444B6B")
+        search_frame.pack(fill="x", padx=15, pady=10)
+        search_entry = ctk.CTkEntry(master=search_frame, width=300, placeholder_text="Wyszukaj grę...")
+        search_entry.pack(side="left", padx=10)
+        ctk.CTkButton(master=search_frame, text="Szukaj", command=lambda: search_action(search_entry.get())).pack(side="left", padx=10)
+        result_frame = ctk.CTkFrame(master=page_shop)
+        result_frame.pack(fill="both", expand=True, padx=15, pady=15)
+
+
+
+
 
     ## LIBRARY CARD ###
     def page_library_def():
@@ -682,22 +757,136 @@ def show_main_menu():
         create_widgets(page_library)
 
 
-    ### COMMUNITY CARD ###
-    def page_community_def():
-        page_community = ctk.CTkFrame(master=frame_middle,fg_color="#555B83",border_width=0.6 , border_color="black",corner_radius=0)
-        page_community.pack(anchor=tkinter.W,expand = True, fill="both")
+    # ### COMMUNITY CARD ###
+    # def page_community_def():
+    #     page_community = ctk.CTkFrame(master=frame_middle,fg_color="#555B83",border_width=0.6 , border_color="black",corner_radius=0)
+    #     page_community.pack(anchor=tkinter.W,expand = True, fill="both")
 
-        community_page_load=ctk.CTkLabel(master=page_community, width=875,  height=432, fg_color="#FFFFFF",corner_radius=15,text="Comming Soon Community",anchor="center",font=("Arial",58),text_color="black")
-        community_page_load.pack(padx=15, pady=15)
+    #     community_page_load=ctk.CTkLabel(master=page_community, width=875,  height=432, fg_color="#FFFFFF",corner_radius=15,text="Comming Soon Community",anchor="center",font=("Arial",58),text_color="black")
+    #     community_page_load.pack(padx=15, pady=15)
+
 
 
     ### WISH LIST CARD ###
-    def page_wish_list_def():
-        page_wish_list = ctk.CTkFrame(master=frame_middle,fg_color="#555B83",border_width=0.6 , border_color="black",corner_radius=0)
-        page_wish_list.pack(anchor=tkinter.W,expand = True, fill="both")
 
-        page_wish_list_load=ctk.CTkLabel(master=page_wish_list, width=875,  height=432, fg_color="#FFFFFF",corner_radius=15,text="Comming Soon WISH List",anchor="center",font=("Arial",58),text_color="black")
-        page_wish_list_load.pack(padx=15, pady=15)
+    # Function to fetch wishlist items for the logged-in user
+    def fetch_wishlist_items(user_id):
+        cursor = db.cursor()
+        cursor.execute('SELECT title, price, link FROM wishlist WHERE user_id = %s', (user_id,))
+        items = cursor.fetchall()
+        return items
+
+    # Function to display the wishlist items
+    def display_wishlist(user_id):
+        # Clear previous content
+        for widget in frame_middle.winfo_children():
+            widget.destroy()
+
+        items = fetch_wishlist_items(user_id)
+
+        if not items:
+            no_items_label = ctk.CTkLabel(master=frame_middle, text="Your wishlist is empty.", text_color="#FFFFFF", font=font3)
+            no_items_label.pack(pady=20)
+            return
+
+        # Create a main frame for better layout, set up for resizing
+        wishlist_frame = ctk.CTkFrame(master=frame_middle, fg_color="#555B83", corner_radius=0)
+        wishlist_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        wishlist_frame.pack_propagate(False)
+
+        # Header for the wishlist
+        header_frame = ctk.CTkFrame(master=wishlist_frame, fg_color="#444B6B", corner_radius=10)
+        header_frame.pack(fill="x", padx=5, pady=5)
+
+        header_label = ctk.CTkLabel(master=header_frame, text="Your Wishlist", text_color="#FFFFFF", font=font1)
+        header_label.pack(pady=5)
+
+        # Scrollable frame for wishlist items
+        scrollable_items_frame = ctk.CTkScrollableFrame(master=wishlist_frame, fg_color="#555B83")
+        scrollable_items_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Configure the scrollable frame for expansion in the main frame
+        scrollable_items_frame.grid_columnconfigure(0, weight=1)
+        
+        # Populate the scrollable frame with wishlist items
+        for idx, (title, price, link) in enumerate(items):
+            item_frame = ctk.CTkFrame(master=scrollable_items_frame, fg_color="#444B6B", border_width=1, border_color="#3F4462", corner_radius=8)
+            item_frame.pack(fill="x", pady=5, padx=10)
+            item_frame.grid_columnconfigure(0, weight=1)
+
+            # Game title
+            title_label = ctk.CTkLabel(master=item_frame, text=f"Title: {title}", text_color="#FFFFFF", font=font3, anchor="w")
+            title_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+
+            # Game price
+            price_label = ctk.CTkLabel(master=item_frame, text=f"Price: {price}", text_color="#FFFFFF", font=font3, anchor="w")
+            price_label.grid(row=0, column=1, padx=10, pady=5, sticky="w")
+
+            # Open game link button, anchored to the right
+            open_button = ctk.CTkButton(
+                master=item_frame, 
+                text="View", 
+                text_color="#FFFFFF", 
+                font=font6, 
+                fg_color="#3F4462", 
+                hover_color="#384069", 
+                command=lambda url=link: open_link(url)
+            )
+            open_button.grid(row=0, column=2, padx=10, pady=5, sticky="e")
+
+            # Delete button, anchored to the right
+            delete_button = ctk.CTkButton(
+                master=item_frame, 
+                text="Delete", 
+                text_color="#FFFFFF", 
+                font=font6, 
+                fg_color="#FF6347", 
+                hover_color="#FF4500", 
+                command=lambda t=title: [remove_from_wishlist(user_id, t), display_wishlist(user_id)]  # Remove and refresh
+            )
+            delete_button.grid(row=0, column=3, padx=10, pady=5, sticky="e")
+
+    # Function to open links in a browser
+    def open_link(url):
+        webbrowser.open_new(url)
+
+    # Main function to set up the wishlist page
+    def page_wish_list_def():
+        # Clear previous frames if any
+        for widget in frame_middle.winfo_children():
+            widget.destroy()
+
+        # Create wishlist frame, set up for resizing
+        page_wishlist = ctk.CTkFrame(master=frame_middle, fg_color="#555B83", border_width=0.6, border_color="black", corner_radius=0)
+        page_wishlist.pack(fill="both", expand=True)
+        page_wishlist.pack_propagate(False)
+
+        # Label for the wishlist title
+        wishlist_label = ctk.CTkLabel(master=page_wishlist, text="Your Wishlist", text_color="#FFFFFF", font=font1)
+        wishlist_label.pack(pady=10)
+
+        # Get the user_id for the logged-in user
+        user_id = get_user_id()  # Fetch the logged-in user's ID
+
+        # Display the wishlist for the user
+        display_wishlist(user_id)  # Populate the wishlist with the user's items
+
+    # Function to remove item from wishlist
+    def remove_from_wishlist(user_id, title):
+        try:
+            cursor.execute(
+                'DELETE FROM wishlist WHERE user_id = %s AND title = %s', (user_id, title)
+            )
+            db.commit()
+            print("Removed from wishlist successfully.")
+        except mysql.connector.Error as e:
+            print(f"An error occurred while removing from wishlist: {e}")
+            db.rollback()
+
+
+
+
+
 
     ### ACCOUNT CARD ###
     def page_account_def():
@@ -724,9 +913,6 @@ def show_main_menu():
         page_account_nickname_label = ctk.CTkLabel(page_account,corner_radius=10)
         page_account_nickname_label.pack(side = "top", padx=30,pady=30,anchor=tkinter.W)
         page_account_nickname_label.configure(text=f"Hello {logged_in_user}",font=font10)
-
-        # page_account_note_abnout_me = ctk.CTkLabel(page_account,corner_radius=10,text="This note is about you")
-        # page_account_note_abnout_me.place(x=250,y=500)
 
         page_account_avatar_label = ctk.CTkLabel(page_account,corner_radius=10,image=image_14,text="")
         page_account_avatar_label.pack(side = "top", padx=40,pady=20,anchor=tkinter.W)
@@ -818,25 +1004,6 @@ def show_main_menu():
     color_var = ctk.StringVar(value="#FFFFFF")  # Domyślny kolor biały
 
     def page_setting_def():
-
-        # def update_new_password():
-        #     new_pass_save1 = new_user_pass1.get()
-        #     new_pass_save1_1 = new_user_pass1_1.get()
-
-        #     if not new_pass_save1 or not new_pass_save1_1:
-        #         tkmb.showerror(title="Błąd", message="Wprowadź hasło i je powtórz")
-        #         return
-        #     elif new_pass_save1 != new_pass_save1_1:
-        #         tkmb.showerror(title="Błąd", message="Wprowadzone dane nie są identyczne")
-        #         return
-        #     hashed_new_password = hashlib.sha256(new_pass_save1.encode()).hexdigest()
-
-        #     cursor.execute("UPDATE users SET password = %s WHERE username = %s",(hashed_new_password,logged_in_user))
-
-        #     db.commit()
-
-        #     tkmb.showinfo(title="Sukces", message="Hasło zostało zmienione pomyślnie.")
-
 
         page_settings = ctk.CTkFrame(master=frame_middle, fg_color="#555B83", border_width=0.6, border_color="black", corner_radius=0)
         page_settings.pack(anchor=tkinter.W, expand=True, fill="both")
@@ -1207,5 +1374,3 @@ def show_main_menu():
     main.mainloop()
 
 app.mainloop()
-
-

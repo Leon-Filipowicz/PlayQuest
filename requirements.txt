@@ -2,3 +2,8 @@ customtkinter
 Pillow
 mysql-connector-python
 sounddevice
+tkhtmlview
+bs4
+flask
+aiohttp
+requests
